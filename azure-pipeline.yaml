@@ -6,7 +6,7 @@ trigger:
 
 pool:
   name: Default
-  vmImage: 'ubuntu-latest'
+  vmImage: 'windows-latest'
 
 variables:
   dockerRegistryServiceConnection: 'fa3d828d-33e8-42d6-8e6c-fd1a4cec5263'
@@ -15,8 +15,6 @@ variables:
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
 
-  # Agent VM image name
-  vmImageName: 'ubuntu-latest'
   azureConnectionName: 'DotNetMvcAppResourceConnection'
   developmentAppService: 'DotNetMvcAppDev'
   productionAppService: 'DotNetMvcAppProd'

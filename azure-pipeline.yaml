@@ -24,6 +24,7 @@ stages:
   jobs:
   - job: StartDockerDaemon
     pool:
+      name: Default
       vmImage: 'windows-latest'
     steps:
     - powershell: |

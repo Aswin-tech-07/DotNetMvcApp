@@ -58,7 +58,7 @@ stages:
 
 - stage: DeployToProd
   dependsOn: Build
-  condition: and(succeeded, eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   jobs:
   - deployment: DeployProduction
     environment: 'Production'   # Reference the environment for approvals

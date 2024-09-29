@@ -27,7 +27,10 @@ stages:
       - job: BuildDockerImage
         pool:
           name: Default
-          vmImage: 'ubuntu-latest'
+          vmImage: 'ubuntu-latest'   
+        container: 
+          image: 'docker:latest'  # Use a Docker image that has Docker CLI
+          options: '--privileged'   # Required for Docker-in-Docker
         steps:
           - task: Docker@2
             inputs:

@@ -20,6 +20,9 @@ stages:
   - stage: Build
     jobs:
       - job: BuildDockerImage
+        pool:
+          name: Default
+          vmImage: 'ubuntu-latest'
         steps:
           - task: Docker@2
             inputs:
@@ -31,7 +34,7 @@ stages:
               containerRegistry: $(dockerRegistryServiceConnection)
               repository: $(imageRepository)
               command: 'buildAndPush'
-              Dockerfile: '**/Dockerfile'
+              dockerfile: '**/Dockerfile'
               tags: |
                 $(Build.BuildId)
               addPipelineData: true

@@ -29,11 +29,12 @@ stages:
               
           - task: Cache@2
             inputs:
-              key: 'nuget | "$(Agent.OS)" | **/packages.lock.json'
+              key: 'nuget | "$(Agent.OS)" | **/*.csproj'
               restoreKeys: |
                 nuget | "$(Agent.OS)"
               path: ~/.nuget/packages
-            displayName: 'Cache NuGet Packages'
+            displayName: 'Cache NuGet Packages Based on csproj'
+
               
           - script: |
               dotnet restore

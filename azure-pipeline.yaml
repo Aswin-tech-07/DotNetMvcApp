@@ -20,7 +20,27 @@ variables:
   productionAppService: 'DotNetMvcAppProd'
 
 stages:
+- stage: SetupDocker
+  jobs:
+  - job: StartDockerDaemon
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    - powershell: |
+        # Start Docker service if not already running
+        $dockerService = Get-Service docker -ErrorAction SilentlyContinue
+        if ($dockerService -and $dockerService.Status -ne 'Running') {
+            Start-Service docker
+            Write-Host "Docker service started."
+        } else {
+            Write-Host "Docker service is already running or not installed."
+        }
+        # Check Docker status
+        Get-Service docker | Select-Object Status
+      displayName: 'Start Docker Daemon and Check Status'
+
 - stage: Build
+  dependsOn: SetupDocker
   jobs:
   - job: BuildDockerImage
     pool:

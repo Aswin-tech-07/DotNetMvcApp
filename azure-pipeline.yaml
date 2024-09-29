@@ -26,6 +26,7 @@ stages:
     jobs:
     - job: InstallDocker
       pool:
+        name: Default
         vmImage: 'ubuntu-latest'
       steps:
         - script: |
@@ -44,6 +45,7 @@ stages:
     jobs:
       - job: BuildDockerImage
         pool:
+          name: Default
           vmImage: 'ubuntu-latest'   
         container: 
           image: 'docker:latest'  # Use a Docker image that has Docker CLI

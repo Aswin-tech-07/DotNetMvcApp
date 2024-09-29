@@ -58,6 +58,7 @@ stages:
               azureSubscription: $(azureConnectionName)
               appType: 'webApp'
               WebAppName: $(developmentAppService)
+              appName: $(developmentAppService)
               package: $(Pipeline.Workspace)/drop
 
   - stage: DeployToProd
@@ -79,4 +80,5 @@ stages:
                     azureSubscription: $(azureConnectionName)
                     appType: 'webApp'
                     WebAppName: $(productionAppService)
+                    appName: $(productionAppService)
                     package: $(Pipeline.Workspace)/drop

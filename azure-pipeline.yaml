@@ -28,19 +28,9 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     - script: |
-        echo "Checking Docker Installation"
-        which docker || echo "Docker is not installed"
-      displayName: 'Check Docker Installation'
-
-    - script: |
-        echo "Checking Docker Daemon Status"
-        ps aux | grep dockerd || echo "Docker daemon is not running"
-      displayName: 'Check Docker Daemon Status'
-
-    - script: |
-        echo "Checking Docker Version"
-        docker --version || echo "Docker is not accessible"
-      displayName: 'Check Docker Version'
+        echo "Starting Docker Daemon"
+        systemctl start docker || echo "Docker daemon cannot be started or is already running"
+      displayName: 'Start Docker Daemon'
 
     - script: |
         echo "Checking Docker Info"

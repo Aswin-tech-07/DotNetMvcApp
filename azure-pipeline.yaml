@@ -27,16 +27,6 @@ stages:
       name: Default
       vmImage: 'ubuntu-latest'
     steps:
-    - script: |
-        echo "Checking Docker Version"
-        docker --version || echo "Docker is not installed or not accessible"
-      displayName: 'Check Docker Version'
-
-    - script: |
-        echo "Checking Docker Status"
-        docker info || echo "Docker daemon is not running or not accessible"
-      displayName: 'Check Docker Status'
-
     - task: Docker@2
       inputs:
         containerRegistry: $(dockerRegistryServiceConnection)
@@ -54,7 +44,7 @@ stages:
 
 - stage: DeployToDevelopment
   dependsOn: Build
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/development')
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/development'))
   jobs:
   - job: DeployDevelopment
     steps:
@@ -68,7 +58,7 @@ stages:
 
 - stage: DeployToProd
   dependsOn: Build
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+  condition: and(succeeded, eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   jobs:
   - deployment: DeployProduction
     environment: 'Production'   # Reference the environment for approvals

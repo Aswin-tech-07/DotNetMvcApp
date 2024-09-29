@@ -9,37 +9,47 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  dockerRegistryServiceConnection: 'DotNetAppServiceConnection'
-  imageRepository: 'dotnetmvcapp.azurecr.io/dotnet-mvc-app'
   azureConnectionName: 'DotNetMvcAppResourceConnection'
-  containerRegistry: 'DotNetMvcApp'
   developmentAppService: 'DotNetMvcAppDev'
   productionAppService: 'DotNetMvcAppProd'
 
 stages:
   - stage: Build
     jobs:
-      - job: BuildDockerImage
+      - job: BuildApp
         pool:
           name: Default
           vmImage: 'ubuntu-latest'
         steps:
-          - task: Docker@2
+          - task: UseDotNet@2
             inputs:
-              containerRegistry: $(dockerRegistryServiceConnection)
-              command: 'login'
-          - task: Docker@2
-            displayName: 'Build and Push Docker Image'
+              packageType: 'sdk'
+              version: '8.x'  # Updated to .NET 8
+              installationPath: $(Agent.ToolsDirectory)/dotnet
+              
+          - task: Cache@2
             inputs:
-              containerRegistry: $(dockerRegistryServiceConnection)
-              repository: $(imageRepository)
-              command: 'buildAndPush'
-              dockerfile: '**/Dockerfile'
-              tags: |
-                $(Build.BuildId)
-              addPipelineData: true
-
-
+              key: 'nuget | "$(Agent.OS)" | **/packages.lock.json'
+              restoreKeys: |
+                nuget | "$(Agent.OS)"
+              path: ~/.nuget/packages
+            displayName: 'Cache NuGet Packages'
+              
+          - script: |
+              dotnet restore
+              dotnet build --configuration Release
+              dotnet publish --configuration Release -o $(Build.ArtifactStagingDirectory)
+            displayName: 'Restore, Build, and Publish'
+          
+          - script: |
+              dotnet test --configuration Release --no-build
+            displayName: 'Run Tests'
+          
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)
+              artifact: 'drop'
+              publishLocation: 'pipeline'
 
   - stage: DeployToDevelopment
     dependsOn: Build
@@ -47,34 +57,34 @@ stages:
     jobs:
       - job: DeployDevelopment
         steps:
-          - task: AzureWebAppContainer@1
+          - download: current
+            artifact: 'drop'
+          
+          - task: AzureWebApp@1
             displayName: 'Deploy to Development App Services'
             inputs:
               azureSubscription: $(azureConnectionName)
-              appName: $(developmentAppService)
-              imageName: $(imageRepository):$(Build.BuildId)
-  
+              appType: 'webApp'
+              WebAppName: $(developmentAppService)
+              package: $(Pipeline.Workspace)/drop
 
   - stage: DeployToProd
     dependsOn: Build
-    condition:  and(succeeded(),eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    condition:  and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
     jobs:
       - deployment: DeployProduction
-        environment: 'Production'   # Reference the environment for approvals
+        environment: 'Production'
         strategy:
           runOnce:
             deploy:
               steps:
-              - task: AzureWebAppContainer@1
-                displayName: 'Deploy to Production App Services'
-                inputs:
-                  azureSubscription: $(azureConnectionName)
-                  appName: $(productionAppService)
-                  imageName: $(imageRepository):$(Build.BuildId)
+                - download: current
+                  artifact: 'drop'
 
-
-
-
-
-
-
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Production App Services'
+                  inputs:
+                    azureSubscription: $(azureConnectionName)
+                    appType: 'webApp'
+                    WebAppName: $(productionAppService)
+                    package: $(Pipeline.Workspace)/drop

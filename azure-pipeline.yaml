@@ -29,8 +29,8 @@ stages:
     steps:
     - task: AzureWebAppContainer@1 # Description what the task will execute
       inputs:
-        azureSubscription: 'DotNetMvcApp'
-        appName: 'devops-course-webapp-test'
+        azureSubscription: '86e6dabd-9dde-49ef-9b3d-e173230d067f'
+        appName: 'dotnetmvcapp'
         containers: $(containerRegistry)/$(imageRepository):$(tag)
 
 - stage: DeployToDevelopment

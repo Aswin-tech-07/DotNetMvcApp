@@ -3,13 +3,14 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/docker
 
 trigger:
-- development
+  branches:
+    include:
+      - development
+      - main
 
 pool:
-  name: default
-
-resources:
-- repo: self
+  name: Default
+  vmImage: 'ubuntu-latest'
 
 variables:
   # Container registry service connection established during pipeline creation

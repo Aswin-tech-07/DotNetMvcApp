@@ -22,11 +22,28 @@ variables:
   productionAppService: 'DotNetMvcAppProd'
 
 stages:
+  - stage: SetupDocker
+    jobs:
+    - job: InstallDocker
+      pool:
+        vmImage: 'ubuntu-latest'
+      steps:
+        - script: |
+            # Install Docker
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+            # Start Docker service
+            sudo systemctl start docker
+            # Enable Docker to start on boot
+            sudo systemctl enable docker
+            # Check Docker status
+            sudo systemctl status docker
+          displayName: 'Install Docker and Check Status'
   - stage: Build
+    dependsOn: SetupDocker
     jobs:
       - job: BuildDockerImage
         pool:
-          name: Default
           vmImage: 'ubuntu-latest'   
         container: 
           image: 'docker:latest'  # Use a Docker image that has Docker CLI

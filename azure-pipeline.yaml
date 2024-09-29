@@ -21,7 +21,6 @@ variables:
 
 stages:
 - stage: Build
-  dependsOn: SetupDocker
   jobs:
   - job: BuildDockerImage
     pool:

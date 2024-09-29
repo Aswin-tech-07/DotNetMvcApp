@@ -28,12 +28,14 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     - script: |
-        echo "Checking Default Shell"
-        echo $SHELL
-        
-        echo "Checking Current Shell"
-        ps -p $$
-      displayName: 'Check Shell Information'
+        echo "Checking Docker Version"
+        docker --version || echo "Docker is not installed or not accessible"
+      displayName: 'Check Docker Version'
+
+    - script: |
+        echo "Checking Docker Status"
+        docker info || echo "Docker daemon is not running or not accessible"
+      displayName: 'Check Docker Status'
 
     - task: Docker@2
       inputs:

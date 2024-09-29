@@ -33,7 +33,6 @@ stages:
         sudo systemctl enable docker
         sudo docker run hello-world
       displayName: 'Start Docker Daemon'
-      displayName: 'Check Docker Version and Status'
     - task: Docker@2
       inputs:
         containerRegistry: $(dockerRegistryServiceConnection)

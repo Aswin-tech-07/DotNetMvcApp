@@ -5,6 +5,9 @@
 trigger:
 - development
 
+pool:
+  name: Default
+  
 resources:
 - repo: self
 

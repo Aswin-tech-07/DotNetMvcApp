@@ -27,15 +27,6 @@ stages:
               version: '8.x'  # Updated to .NET 8
               installationPath: $(Agent.ToolsDirectory)/dotnet
               
-          - task: Cache@2
-            inputs:
-              key: 'nuget | "$(Agent.OS)" | **/*.csproj'
-              restoreKeys: |
-                nuget | "$(Agent.OS)"
-              path: ~/.nuget/packages
-            displayName: 'Cache NuGet Packages Based on csproj'
-
-              
           - script: |
               dotnet restore
               dotnet build --configuration Release

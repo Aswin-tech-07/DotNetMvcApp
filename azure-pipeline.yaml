@@ -48,22 +48,22 @@ stages:
       - job: BuildDockerImage
         pool:
           name: Default
-                  vmImage: 'windows-latest'
-      steps:
-        - task: Docker@2
-          inputs:
-            containerRegistry: $(dockerRegistryServiceConnection)
-            command: 'login'
-        - task: Docker@2
-          displayName: 'Build and Push Docker Image'
-          inputs:
-            containerRegistry: $(dockerRegistryServiceConnection)
-            repository: $(imageRepository)
-            command: 'buildAndPush'
-            dockerfile: '**/Dockerfile'
-            tags: |
-              $(Build.BuildId)
-            addPipelineData: true
+          vmImage: 'windows-latest'
+        steps:
+          - task: Docker@2
+            inputs:
+              containerRegistry: $(dockerRegistryServiceConnection)
+              command: 'login'
+          - task: Docker@2
+            displayName: 'Build and Push Docker Image'
+            inputs:
+              containerRegistry: $(dockerRegistryServiceConnection)
+              repository: $(imageRepository)
+              command: 'buildAndPush'
+              dockerfile: '**/Dockerfile'
+              tags: |
+                $(Build.BuildId)
+              addPipelineData: true
 
   - stage: DeployToDevelopment
     dependsOn: Build

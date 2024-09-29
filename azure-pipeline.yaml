@@ -27,12 +27,16 @@ stages:
       name: Default
       vmImage: 'ubuntu-latest'
     steps:
-    - script: |
-        sudo systemctl status docker
-        sudo systemctl start docker
-        sudo systemctl enable docker
-        sudo docker run hello-world
+    - bash: |
+        echo "Starting Docker Daemon"
+        systemctl start docker || echo "Docker daemon is already running"
       displayName: 'Start Docker Daemon'
+      
+    - bash: |
+        docker --version
+        docker info
+      displayName: 'Check Docker Version and Status'
+      
     - task: Docker@2
       inputs:
         containerRegistry: $(dockerRegistryServiceConnection)

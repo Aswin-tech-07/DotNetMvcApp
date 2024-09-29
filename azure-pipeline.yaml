@@ -20,28 +20,6 @@ variables:
   productionAppService: 'DotNetMvcAppProd'
 
 stages:
-  - stage: SetupDocker
-    jobs:
-    - job: InstallDocker
-      pool:
-        name: Default
-        vmImage: 'windows-latest'
-      steps:
-        - powershell: |
-            # Check if Docker is already installed
-            if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
-                # Install Docker
-                Install-Package -Name docker -Source DockerMsftProvider -Force
-                # Start Docker service
-                Start-Service docker
-                Write-Host "Docker installed and started."
-            } else {
-                Write-Host "Docker is already installed."
-            }
-            # Check Docker status
-            Get-Service docker | Select-Object Status
-          displayName: 'Install Docker and Check Status'
-
   - stage: Build
     dependsOn: SetupDocker
     jobs:

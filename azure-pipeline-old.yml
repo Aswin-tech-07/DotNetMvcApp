@@ -20,22 +20,30 @@ stages:
   - stage: Build
     jobs:
       - job: BuildDockerImage
+        pool:
+          name: Default
+          vmImage: 'ubuntu-latest'
         steps:
+          - task: Docker@2
+            inputs:
+              containerRegistry: $(dockerRegistryServiceConnection)
+              command: 'login'
           - task: Docker@2
             displayName: 'Build and Push Docker Image'
             inputs:
               containerRegistry: $(dockerRegistryServiceConnection)
               repository: $(imageRepository)
               command: 'buildAndPush'
-              Dockerfile: 'Dockerfile'
+              dockerfile: '**/Dockerfile'
               tags: |
                 $(Build.BuildId)
               addPipelineData: true
 
 
+
   - stage: DeployToDevelopment
     dependsOn: Build
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/development')
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/development'))
     jobs:
       - job: DeployDevelopment
         steps:
@@ -49,7 +57,7 @@ stages:
 
   - stage: DeployToProd
     dependsOn: Build
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    condition:  and(succeeded(),eq(variables['Build.SourceBranch'], 'refs/heads/main'))
     jobs:
       - deployment: DeployProduction
         environment: 'Production'   # Reference the environment for approvals

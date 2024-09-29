@@ -1,0 +1,84 @@
+trigger:
+  branches:
+    include:
+      - development
+      - main
+
+pool:
+  name: Default
+  vmImage: 'ubuntu-latest'
+
+variables:
+  azureConnectionName: 'DotNetMvcAppResourceConnection'
+  developmentAppService: 'DotNetMvcAppDev'
+  productionAppService: 'DotNetMvcAppProd'
+
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildApp
+        pool:
+          name: Default
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: '8.x'  # Updated to .NET 8
+              installationPath: $(Agent.ToolsDirectory)/dotnet
+              
+          - script: |
+              dotnet restore
+              dotnet build --configuration Release
+              dotnet publish --configuration Release -o $(Build.ArtifactStagingDirectory)
+            displayName: 'Restore, Build, and Publish'
+          
+          - script: |
+              dotnet test --configuration Release --no-build
+            displayName: 'Run Tests'
+          
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)
+              artifact: 'drop'
+              publishLocation: 'pipeline'
+
+  - stage: DeployToDevelopment
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/development'))
+    jobs:
+      - job: DeployDevelopment
+        steps:
+          - download: current
+            artifact: 'drop'
+          
+          - task: AzureWebApp@1
+            displayName: 'Deploy to Development App Services'
+            inputs:
+              azureSubscription: $(azureConnectionName)
+              appType: 'webApp'
+              WebAppName: $(developmentAppService)
+              appName: $(developmentAppService)
+              package: $(Pipeline.Workspace)/drop
+
+  - stage: DeployToProd
+    dependsOn: Build
+    condition:  and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployProduction
+        environment: 'Production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: 'drop'
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Production App Services'
+                  inputs:
+                    azureSubscription: $(azureConnectionName)
+                    appType: 'webApp'
+                    WebAppName: $(productionAppService)
+                    appName: $(productionAppService)
+                    package: $(Pipeline.Workspace)/drop

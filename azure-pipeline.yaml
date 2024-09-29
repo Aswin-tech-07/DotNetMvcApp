@@ -29,7 +29,7 @@ stages:
     steps:
     - task: AzureWebAppContainer@1 # Description what the task will execute
       inputs:
-        azureSubscription: '86e6dabd-9dde-49ef-9b3d-e173230d067f'
+        azureSubscription: $(dockerRegistryServiceConnection)
         appName: 'dotnetmvcapp'
         containers: $(containerRegistry)/$(imageRepository):$(tag)
 

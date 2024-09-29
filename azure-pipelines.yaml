@@ -21,16 +21,13 @@ stages:
     jobs:
       - job: BuildDockerImage
         steps:
-          - script: |
-              docker version  # Check if Docker is running
-            displayName: 'Check Docker Version'
           - task: Docker@2
             displayName: 'Build and Push Docker Image'
             inputs:
               containerRegistry: $(dockerRegistryServiceConnection)
               repository: $(imageRepository)
               command: 'buildAndPush'
-              Dockerfile: 'Dockerfile'
+              Dockerfile: '**/Dockerfile'
               tags: |
                 $(Build.BuildId)
               addPipelineData: true

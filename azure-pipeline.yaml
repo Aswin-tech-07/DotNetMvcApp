@@ -28,14 +28,12 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     - script: |
-        echo "Starting Docker Daemon"
-        systemctl start docker || echo "Docker daemon cannot be started or is already running"
-      displayName: 'Start Docker Daemon'
-
-    - script: |
-        echo "Checking Docker Info"
-        docker info || echo "Docker daemon is not running or not accessible"
-      displayName: 'Check Docker Status'
+        echo "Checking Default Shell"
+        echo $SHELL
+        
+        echo "Checking Current Shell"
+        ps -p $$
+      displayName: 'Check Shell Information'
 
     - task: Docker@2
       inputs:

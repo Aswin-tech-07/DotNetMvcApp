@@ -31,14 +31,14 @@ stages:
       steps:
         - script: |
             # Install Docker
-            sudo apt-get update
-            sudo apt-get install -y docker.io
+            apt-get update
+            apt-get install -y docker.io
             # Start Docker service
-            sudo systemctl start docker
+            systemctl start docker
             # Enable Docker to start on boot
-            sudo systemctl enable docker
+            systemctl enable docker
             # Check Docker status
-            sudo systemctl status docker
+            systemctl status docker
           displayName: 'Install Docker and Check Status'
   - stage: Build
     dependsOn: SetupDocker

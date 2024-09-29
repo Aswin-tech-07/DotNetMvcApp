@@ -27,46 +27,45 @@ stages:
     - job: InstallDocker
       pool:
         name: Default
-        vmImage: 'ubuntu-latest'
+        vmImage: 'windows-latest'
       steps:
-        - script: |
-            # Install Docker
-            apt-get update
-            apt-get install -y docker.io
-            # Start Docker service
-            systemctl start docker
-            # Enable Docker to start on boot
-            systemctl enable docker
+        - powershell: |
+            # Check if Docker is already installed
+            if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+                # Install Docker
+                Install-Package -Name docker -Source DockerMsftProvider -Force
+                # Start Docker service
+                Start-Service docker
+                Write-Host "Docker installed and started."
+            } else {
+                Write-Host "Docker is already installed."
+            }
             # Check Docker status
-            systemctl status docker
+            Get-Service docker | Select-Object Status
           displayName: 'Install Docker and Check Status'
+
   - stage: Build
     dependsOn: SetupDocker
     jobs:
       - job: BuildDockerImage
         pool:
           name: Default
-          vmImage: 'ubuntu-latest'   
-        container: 
-          image: 'docker:latest'  # Use a Docker image that has Docker CLI
-          options: '--privileged'   # Required for Docker-in-Docker
-        steps:
-          - task: Docker@2
-            inputs:
-              containerRegistry: $(dockerRegistryServiceConnection)
-              command: 'login'
-          - task: Docker@2
-            displayName: 'Build and Push Docker Image'
-            inputs:
-              containerRegistry: $(dockerRegistryServiceConnection)
-              repository: $(imageRepository)
-              command: 'buildAndPush'
-              dockerfile: '**/Dockerfile'
-              tags: |
-                $(Build.BuildId)
-              addPipelineData: true
-
-
+                  vmImage: 'windows-latest'
+      steps:
+        - task: Docker@2
+          inputs:
+            containerRegistry: $(dockerRegistryServiceConnection)
+            command: 'login'
+        - task: Docker@2
+          displayName: 'Build and Push Docker Image'
+          inputs:
+            containerRegistry: $(dockerRegistryServiceConnection)
+            repository: $(imageRepository)
+            command: 'buildAndPush'
+            dockerfile: '**/Dockerfile'
+            tags: |
+              $(Build.BuildId)
+            addPipelineData: true
 
   - stage: DeployToDevelopment
     dependsOn: Build

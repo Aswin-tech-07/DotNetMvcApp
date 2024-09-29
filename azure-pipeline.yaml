@@ -9,60 +9,68 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  dockerRegistryServiceConnection: 'fa3d828d-33e8-42d6-8e6c-fd1a4cec5263'
-  imageRepository: 'aswintechdotnetmvcapp'
-  containerRegistry: 'dotnetmvcapp.azurecr.io'
-  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
-  tag: '$(Build.BuildId)'
-
+  dockerRegistryServiceConnection: 'DotNetAppServiceConnection'
+  imageRepository: 'dotnetmvcapp.azurecr.io/dotnet-mvc-app'
   azureConnectionName: 'DotNetMvcAppResourceConnection'
+  containerRegistry: 'DotNetMvcApp'
   developmentAppService: 'DotNetMvcAppDev'
   productionAppService: 'DotNetMvcAppProd'
 
 stages:
-- stage: Build
-  jobs:
-  - job: BuildDockerImage
-    pool:
-      name: Default
-      vmImage: 'ubuntu-latest'
-    steps:
-    - task: AzureWebAppContainer@1 # Description what the task will execute
-      inputs:
-        azureSubscription: $(dockerRegistryServiceConnection)
-        appName: 'dotnetmvcapp'
-        containers: $(containerRegistry)/$(imageRepository):$(tag)
+  - stage: Build
+    jobs:
+      - job: BuildDockerImage
+        pool:
+          name: Default
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Docker@2
+            inputs:
+              containerRegistry: $(dockerRegistryServiceConnection)
+              command: 'login'
+          - task: Docker@2
+            displayName: 'Build and Push Docker Image'
+            inputs:
+              containerRegistry: $(dockerRegistryServiceConnection)
+              repository: $(imageRepository)
+              command: 'buildAndPush'
+              dockerfile: '**/Dockerfile'
+              tags: |
+                $(Build.BuildId)
+              addPipelineData: true
 
-- stage: DeployToDevelopment
-  dependsOn: Build
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/development'))
-  jobs:
-  - job: DeployDevelopment
-    steps:
-    - task: AzureWebAppContainer@1
-      displayName: 'Deploy to Development App Services'
-      inputs:
-        azureSubscription: $(azureConnectionName)
-        appName: $(developmentAppService)
-        imageName: $(imageRepository):$(Build.BuildId)
-  
 
-- stage: DeployToProd
-  dependsOn: Build
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  jobs:
-  - deployment: DeployProduction
-    environment: 'Production'   # Reference the environment for approvals
-    strategy:
-      runOnce:
-        deploy:
-          steps:
+
+  - stage: DeployToDevelopment
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/development'))
+    jobs:
+      - job: DeployDevelopment
+        steps:
           - task: AzureWebAppContainer@1
-            displayName: 'Deploy to Production App Services'
+            displayName: 'Deploy to Development App Services'
             inputs:
               azureSubscription: $(azureConnectionName)
-              appName: $(productionAppService)
+              appName: $(developmentAppService)
               imageName: $(imageRepository):$(Build.BuildId)
+  
+
+  - stage: DeployToProd
+    dependsOn: Build
+    condition:  and(succeeded(),eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployProduction
+        environment: 'Production'   # Reference the environment for approvals
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+              - task: AzureWebAppContainer@1
+                displayName: 'Deploy to Production App Services'
+                inputs:
+                  azureSubscription: $(azureConnectionName)
+                  appName: $(productionAppService)
+                  imageName: $(imageRepository):$(Build.BuildId)
 
 
 

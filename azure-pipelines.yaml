@@ -1,0 +1,71 @@
+trigger:
+  branches:
+    include:
+      - development
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  dockerRegistryServiceConnection: 'DotNetAppServiceConnection'
+  imageRepository: 'dotnetmvcapp.azurecr.io/dotnet-mvc-app'
+  azureConnectionName: 'DotNetMvcAppResourceConnection'
+  containerRegistry: 'DotNetMvcApp'
+  developmentAppService: 'DotNetMvcAppDev'
+  productionAppService: 'DotNetMvcAppProd'
+
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildDockerImage
+        steps:
+          - task: Docker@2
+            displayName: 'Build and Push Docker Image'
+            inputs:
+              containerRegistry: $(dockerRegistryServiceConnection)
+              repository: $(imageRepository)
+              command: 'buildAndPush'
+              Dockerfile: 'Dockerfile'
+              tags: |
+                $(Build.BuildId)
+              addPipelineData: true
+
+
+  - stage: DeployToDevelopment
+    dependsOn: Build
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/development')
+    jobs:
+      - job: DeployDevelopment
+        steps:
+          - task: AzureWebAppContainer@1
+            displayName: 'Deploy to Development App Services'
+            inputs:
+              azureSubscription: $(azureConnectionName)
+              appName: $(developmentAppService)
+              imageName: $(imageRepository):$(Build.BuildId)
+  
+
+  - stage: DeployToProd
+    dependsOn: Build
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    jobs:
+      - deployment: DeployProduction
+        environment: 'Production'   # Reference the environment for approvals
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+              - task: AzureWebAppContainer@1
+                displayName: 'Deploy to Production App Services'
+                inputs:
+                  azureSubscription: $(azureConnectionName)
+                  appName: $(productionAppService)
+                  imageName: $(imageRepository):$(Build.BuildId)
+
+
+
+
+
+
+

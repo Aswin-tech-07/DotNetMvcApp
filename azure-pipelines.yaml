@@ -9,10 +9,9 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  dockerRegistryServiceConnection: 'DotNetAppServiceConnection'
-  imageRepository: 'dotnetmvcapp.azurecr.io/dotnet-mvc-app'
+  imageRepository: 'dotnetmvcapp'
   azureConnectionName: 'DotNetMvcAppResourceConnection'
-  containerRegistry: 'DotNetMvcApp'
+  containerRegistry: 'dotnetmvcapp.azurecr.io/dotnet-mvc-app'
   developmentAppService: 'DotNetMvcAppDev'
   productionAppService: 'DotNetMvcAppProd'
 
@@ -26,12 +25,12 @@ stages:
         steps:
           - task: Docker@2
             inputs:
-              containerRegistry: $(dockerRegistryServiceConnection)
+              containerRegistry: $(containerRegistry)
               command: 'login'
           - task: Docker@2
             displayName: 'Build and Push Docker Image'
             inputs:
-              containerRegistry: $(dockerRegistryServiceConnection)
+              containerRegistry: $(containerRegistry)
               repository: $(imageRepository)
               command: 'buildAndPush'
               dockerfile: '**/Dockerfile'

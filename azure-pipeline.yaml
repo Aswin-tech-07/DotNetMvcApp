@@ -28,15 +28,25 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     - script: |
+        echo "Checking Docker Installation"
+        which docker || echo "Docker is not installed"
+      displayName: 'Check Docker Installation'
+
+    - script: |
+        echo "Checking Docker Daemon Status"
+        ps aux | grep dockerd || echo "Docker daemon is not running"
+      displayName: 'Check Docker Daemon Status'
+
+    - script: |
         echo "Checking Docker Version"
-        docker --version || echo "Docker is not installed or not accessible"
+        docker --version || echo "Docker is not accessible"
       displayName: 'Check Docker Version'
 
     - script: |
-        echo "Checking Docker Status"
+        echo "Checking Docker Info"
         docker info || echo "Docker daemon is not running or not accessible"
       displayName: 'Check Docker Status'
-      
+
     - task: Docker@2
       inputs:
         containerRegistry: $(dockerRegistryServiceConnection)
